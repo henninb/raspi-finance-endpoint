@@ -390,7 +390,7 @@ class AccountControllerSpec extends Specification {
         response.body.accountNameOwner == "new"
     }
 
-    def "renameAccountNameOwner throws DataIntegrityViolationException on conflict"() {
+    def "renameAccountNameOwner throws DuplicateAccountException on conflict"() {
         given:
         Account existing = acct(accountId: 61L, accountNameOwner: "old")
         Account conflicting = acct(accountId: 62L, accountNameOwner: "new")
@@ -402,7 +402,19 @@ class AccountControllerSpec extends Specification {
         controller.renameAccountNameOwner("old", "new")
 
         then:
-        thrown(org.springframework.dao.DataIntegrityViolationException)
+        def ex = thrown(finance.exceptions.DuplicateAccountException)
+        ex.message.contains("account named 'new' already exists")
+    }
+
+    def "handleDuplicateAccountException returns 409 with descriptive message"() {
+        when:
+        ResponseEntity<Map<String, Object>> response =
+            controller.handleDuplicateAccountException(new finance.exceptions.DuplicateAccountException("an account named 'new' already exists"))
+
+        then:
+        response.statusCode == HttpStatus.CONFLICT
+        response.body.code == "CONFLICT"
+        response.body.message == "an account named 'new' already exists"
     }
 
     def "deactivateAccount returns 200"() {

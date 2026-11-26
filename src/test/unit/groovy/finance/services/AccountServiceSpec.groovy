@@ -398,7 +398,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "renameAccountNameOwner should throw DataIntegrityViolationException when new name already exists"() {
+    def "renameAccountNameOwner should throw DuplicateAccountException when new name already exists"() {
         given: "existing account and a conflict on the target name"
         def account = AccountBuilder.builder().withAccountNameOwner("old_name").build()
         def conflicting = AccountBuilder.builder().withAccountNameOwner("new_name").build()
@@ -410,7 +410,8 @@ class AccountServiceSpec extends BaseServiceSpec {
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "old_name") >> Optional.of(account)
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "new_name") >> Optional.of(conflicting)
         0 * transactionRepositoryMock.updateAccountNameOwnerForAllTransactionsByOwner(_, _, _)
-        thrown(DataIntegrityViolationException)
+        def ex = thrown(finance.exceptions.DuplicateAccountException)
+        ex.message.contains("account named 'new_name' already exists")
         0 * _
     }
 

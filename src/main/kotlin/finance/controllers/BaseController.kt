@@ -1,6 +1,7 @@
 package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.exceptions.DuplicateAccountException
 import finance.utils.IpAddressValidator
 import jakarta.persistence.EntityNotFoundException
 import jakarta.servlet.http.HttpServletRequest
@@ -67,6 +68,14 @@ open class BaseController {
         val status = HttpStatus.NOT_FOUND
         logSecureError("ENTITY_NOT_FOUND", throwable, status)
         val body = buildErrorBody(status, "NOT_FOUND", throwable.message ?: "Entity not found")
+        return ResponseEntity(body, status)
+    }
+
+    @ExceptionHandler(value = [DuplicateAccountException::class])
+    open fun handleDuplicateAccountException(throwable: DuplicateAccountException): ResponseEntity<Map<String, Any>> {
+        val status = HttpStatus.CONFLICT
+        logSecureError("DUPLICATE_ACCOUNT", throwable, status)
+        val body = buildErrorBody(status, "CONFLICT", throwable.message ?: "Account already exists")
         return ResponseEntity(body, status)
     }
 

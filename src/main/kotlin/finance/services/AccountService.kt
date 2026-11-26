@@ -5,6 +5,7 @@ import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.ServiceResult
 import finance.domain.TransactionState
+import finance.exceptions.DuplicateAccountException
 import finance.repositories.AccountRepository
 import finance.repositories.ValidationAmountRepository
 import finance.utils.TenantContext
@@ -268,9 +269,15 @@ class AccountService
                     }
 
             // Verify new name is not already taken BEFORE touching any transactions
-            if (accountRepository.findByOwnerAndAccountNameOwner(owner, newAccountNameOwner).isPresent) {
-                logger.error("Cannot rename: account '$newAccountNameOwner' already exists")
-                throw DataIntegrityViolationException("Account already exists: $newAccountNameOwner")
+            val existingTarget = accountRepository.findByOwnerAndAccountNameOwner(owner, newAccountNameOwner)
+            if (existingTarget.isPresent) {
+                val status = if (existingTarget.get().activeStatus) "active" else "inactive"
+                logger.warn("Cannot rename: account '$newAccountNameOwner' already exists ($status)")
+                throw DuplicateAccountException(
+                    "Cannot rename '$oldAccountNameOwner' to '$newAccountNameOwner': an $status account " +
+                        "named '$newAccountNameOwner' already exists. Choose a different name, or rename " +
+                        "or delete the existing account first.",
+                )
             }
 
             try {
@@ -289,7 +296,10 @@ class AccountService
                 return renamedAccount
             } catch (ex: DataIntegrityViolationException) {
                 logger.error("Cannot rename account: $newAccountNameOwner already exists or violates constraints", ex)
-                throw ex
+                throw DuplicateAccountException(
+                    "Cannot rename '$oldAccountNameOwner' to '$newAccountNameOwner': an account " +
+                        "named '$newAccountNameOwner' already exists.",
+                )
             } catch (ex: Exception) {
                 logger.error("Failed to rename account from $oldAccountNameOwner to $newAccountNameOwner: ${ex.message}", ex)
                 throw ex
