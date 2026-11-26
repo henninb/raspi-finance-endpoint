@@ -1,9 +1,9 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.fasterxml.jackson.databind.exc.ValueInstantiationException
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.databind.exc.InvalidFormatException
+import tools.jackson.databind.exc.MismatchedInputException
+import tools.jackson.databind.exc.ValueInstantiationException
 import finance.helpers.MedicalProviderBuilder
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -87,9 +87,9 @@ class MedicalProviderSpec extends BaseDomainSpec {
 
         where:
         payload                            | exceptionThrown          | message
-        'non-jsonPayload'                  | JsonParseException       | 'Unrecognized token'
+        'non-jsonPayload'                  | StreamReadException       | 'Unrecognized token'
         '[]'                              | MismatchedInputException | 'Cannot deserialize value of type'
-        '{providerName: "test"}'          | JsonParseException       | 'was expecting double-quote to start field name'
+        '{providerName: "test"}'          | StreamReadException       | 'was expecting double-quote to start property name'
         '{"activeStatus": "abc"}'         | InvalidFormatException   | 'Cannot deserialize value of type'
         jsonPayloadInvalidProviderType    | ValueInstantiationException | 'Unknown MedicalProviderType'
     }

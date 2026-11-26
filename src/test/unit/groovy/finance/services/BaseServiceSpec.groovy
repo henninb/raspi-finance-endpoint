@@ -1,6 +1,7 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 import finance.configurations.ResilienceComponents
 import finance.repositories.*
 import io.micrometer.core.instrument.*
@@ -35,7 +36,7 @@ class BaseServiceSpec extends Specification {
     protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
     protected ReceiptImageRepository receiptImageRepositoryMock = GroovyMock(ReceiptImageRepository)
     protected ValidationAmountRepository validationAmountRepositoryMock = GroovyMock(ValidationAmountRepository)
-    protected ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
+    protected ObjectMapper mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected String baseName = new FileSystemResource("").getFile().absolutePath
     protected Counter counter = Mock(Counter)

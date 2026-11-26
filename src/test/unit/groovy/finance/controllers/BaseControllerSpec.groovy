@@ -204,7 +204,7 @@ class BaseControllerSpec extends Specification {
 
         then:
         mapper != null
-        mapper instanceof com.fasterxml.jackson.databind.ObjectMapper
+        mapper instanceof tools.jackson.databind.ObjectMapper
     }
 
     def "should have logger in companion object"() {

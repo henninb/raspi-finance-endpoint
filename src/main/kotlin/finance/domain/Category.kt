@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
 import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
@@ -21,6 +20,7 @@ import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import tools.jackson.databind.json.JsonMapper
 import java.sql.Timestamp
 import java.util.Calendar
 
@@ -73,6 +73,6 @@ data class Category(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper().findAndRegisterModules()
+        private val mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
     }
 }

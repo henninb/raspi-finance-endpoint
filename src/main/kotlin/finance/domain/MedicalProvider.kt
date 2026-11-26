@@ -3,7 +3,6 @@ package finance.domain
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
 import finance.utils.MedicalProviderTypeConverter
 import finance.utils.NetworkStatusConverter
@@ -20,6 +19,7 @@ import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import tools.jackson.databind.json.JsonMapper
 import java.sql.Timestamp
 import java.util.Calendar
 
@@ -158,6 +158,6 @@ data class MedicalProvider(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper().findAndRegisterModules()
+        private val mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
     }
 }

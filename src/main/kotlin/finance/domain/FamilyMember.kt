@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.FamilyRelationshipConverter
 import finance.utils.LowerCaseConverter
 import jakarta.persistence.Column
@@ -18,6 +17,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import tools.jackson.databind.json.JsonMapper
 import java.sql.Date
 import java.sql.Timestamp
 import java.util.Calendar
@@ -89,6 +89,6 @@ data class FamilyMember(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper().findAndRegisterModules()
+        private val mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
     }
 }

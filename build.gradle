@@ -161,10 +161,14 @@ dependencies {
     //Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-    // Spring Boot 4.2 no longer manages Jackson 2; pin via its BOM until the code migrates to Jackson 3 (tools.jackson)
-    implementation(platform("com.fasterxml.jackson:jackson-bom:${jackson2Version}"))
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    // Jackson 3 (version managed by Spring Boot); java.time support is built into jackson-databind 3
+    implementation("tools.jackson.module:jackson-module-kotlin")
+    // jjwt-jackson still requires Jackson 2 at runtime; keep it current (it would otherwise resolve 2.12.x,
+    // which is too old for Spring Boot's Jackson 2 actuator support)
+    constraints {
+        runtimeOnly("com.fasterxml.jackson.core:jackson-databind:${jackson2Version}")
+        runtimeOnly("com.fasterxml.jackson.core:jackson-core:${jackson2Version}")
+    }
 
     //Groovy
     implementation("org.apache.groovy:groovy:${groovyVersion}")

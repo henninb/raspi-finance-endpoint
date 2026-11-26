@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
@@ -19,6 +18,7 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import tools.jackson.databind.json.JsonMapper
 import java.sql.Timestamp
 import java.util.Calendar
 
@@ -80,9 +80,10 @@ data class User(
     companion object {
         @JsonIgnore
         private val mapper =
-            ObjectMapper().apply {
-                setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
-                findAndRegisterModules()
-            }
+            JsonMapper
+                .builderWithJackson2Defaults()
+                .changeDefaultPropertyInclusion { JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL) }
+                .findAndAddModules()
+                .build()
     }
 }

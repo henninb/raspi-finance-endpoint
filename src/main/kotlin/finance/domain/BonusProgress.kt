@@ -1,7 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -22,6 +22,6 @@ data class BonusProgress(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper().findAndRegisterModules()
+        private val mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
     }
 }

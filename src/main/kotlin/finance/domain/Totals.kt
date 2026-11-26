@@ -1,7 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 import java.math.BigDecimal
 
 data class Totals(
@@ -14,6 +14,6 @@ data class Totals(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper().findAndRegisterModules()
+        private val mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
     }
 }

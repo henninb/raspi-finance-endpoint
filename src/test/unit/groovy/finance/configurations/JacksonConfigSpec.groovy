@@ -1,61 +1,45 @@
 package finance.configurations
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer
 import spock.lang.Specification
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 
 class JacksonConfigSpec extends Specification {
 
-    JacksonConfig jacksonConfig
+    JacksonConfig jacksonConfig = new JacksonConfig()
 
-    def setup() {
-        jacksonConfig = new JacksonConfig()
+    def "kotlinModuleCustomizer returns a non-null JsonMapperBuilderCustomizer"() {
+        expect:
+        jacksonConfig.kotlinModuleCustomizer() != null
     }
 
-    def "kotlinModulePostProcessor returns a non-null BeanPostProcessor"() {
-        when:
-        BeanPostProcessor processor = jacksonConfig.kotlinModulePostProcessor()
-
-        then:
-        processor != null
-    }
-
-    def "postProcessAfterInitialization registers KotlinModule on ObjectMapper and returns same instance"() {
+    def "customizer registers KotlinModule with NullIsSameAsDefault enabled"() {
         given:
-        BeanPostProcessor processor = jacksonConfig.kotlinModulePostProcessor()
-        ObjectMapper mapper = new ObjectMapper()
+        JsonMapperBuilderCustomizer customizer = jacksonConfig.kotlinModuleCustomizer()
+        JsonMapper.Builder builder = JsonMapper.builder()
 
         when:
-        Object result = processor.postProcessAfterInitialization(mapper, "objectMapper")
+        customizer.customize(builder)
+        JsonMapper mapper = builder.build()
+        def kotlinModules = mapper.registeredModules().findAll { it instanceof KotlinModule }
 
         then:
-        result.is(mapper)
-        noExceptionThrown()
+        kotlinModules.size() == 1
+        ((KotlinModule) kotlinModules.first()).nullIsSameAsDefault
     }
 
-    def "postProcessAfterInitialization returns non-ObjectMapper bean unchanged"() {
-        given:
-        BeanPostProcessor processor = jacksonConfig.kotlinModulePostProcessor()
-        String nonMapperBean = "someStringBean"
+    def "customizer replaces a default KotlinModule found by findAndAddModules"() {
+        given: "a builder that has already auto-discovered the default KotlinModule, as Spring Boot does"
+        JsonMapper.Builder builder = JsonMapper.builder().findAndAddModules()
 
         when:
-        Object result = processor.postProcessAfterInitialization(nonMapperBean, "someStringBean")
+        jacksonConfig.kotlinModuleCustomizer().customize(builder)
+        JsonMapper mapper = builder.build()
+        def kotlinModules = mapper.registeredModules().findAll { it instanceof KotlinModule }
 
         then:
-        result.is(nonMapperBean)
-    }
-
-    def "postProcessAfterInitialization handles multiple ObjectMapper beans"() {
-        given:
-        BeanPostProcessor processor = jacksonConfig.kotlinModulePostProcessor()
-        ObjectMapper mapper1 = new ObjectMapper()
-        ObjectMapper mapper2 = new ObjectMapper()
-
-        when:
-        processor.postProcessAfterInitialization(mapper1, "primaryObjectMapper")
-        processor.postProcessAfterInitialization(mapper2, "secondaryObjectMapper")
-
-        then:
-        noExceptionThrown()
+        kotlinModules.size() == 1
+        ((KotlinModule) kotlinModules.first()).nullIsSameAsDefault
     }
 }

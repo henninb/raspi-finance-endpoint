@@ -1,8 +1,8 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.databind.exc.InvalidFormatException
+import tools.jackson.databind.exc.MismatchedInputException
 import finance.helpers.ValidationAmountBuilder
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
@@ -37,9 +37,9 @@ class ValidationAmountSpec extends BaseDomainSpec {
 
         where:
         payload                   | exceptionThrown          | message
-        'non-jsonPayload'         | JsonParseException       | 'Unrecognized token'
+        'non-jsonPayload'         | StreamReadException       | 'Unrecognized token'
         '[]'                      | MismatchedInputException | 'Cannot deserialize value of type'
-        '{"amount": "123",}'      | JsonParseException       | 'was expecting double-quote to start field name'
+        '{"amount": "123",}'      | StreamReadException       | 'was expecting double-quote to start property name'
         '{"activeStatus": "abc"}' | InvalidFormatException   | 'Cannot deserialize value of type'
     }
 

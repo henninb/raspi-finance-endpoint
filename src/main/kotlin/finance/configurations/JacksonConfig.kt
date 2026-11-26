@@ -1,36 +1,31 @@
 package finance.configurations
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import org.apache.logging.log4j.LogManager
-import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
+import tools.jackson.module.kotlin.KotlinFeature
+import tools.jackson.module.kotlin.KotlinModule
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 open class JacksonConfig {
+    /**
+     * Registers the Kotlin module with NullIsSameAsDefault on Spring Boot's Jackson 3 JsonMapper.
+     * Runs last so it replaces the default-configured KotlinModule that findAndAddModules() picks up.
+     */
     @Bean
-    open fun kotlinModulePostProcessor(): BeanPostProcessor =
-        object : BeanPostProcessor {
-            override fun postProcessAfterInitialization(
-                bean: Any,
-                beanName: String,
-            ): Any {
-                if (bean is ObjectMapper) {
-                    bean.registerModule(
-                        KotlinModule
-                            .Builder()
-                            .configure(KotlinFeature.NullIsSameAsDefault, true)
-                            .build(),
-                    )
-                    logger.info("Configured KotlinModule with NullIsSameAsDefault=true on ObjectMapper bean: $beanName")
-                }
-                return bean
-            }
+    @Order(Ordered.LOWEST_PRECEDENCE)
+    open fun kotlinModuleCustomizer(): JsonMapperBuilderCustomizer =
+        JsonMapperBuilderCustomizer { builder ->
+            builder.addModule(kotlinModule())
         }
 
     companion object {
-        private val logger = LogManager.getLogger()
+        fun kotlinModule(): KotlinModule =
+            KotlinModule
+                .Builder()
+                .configure(KotlinFeature.NullIsSameAsDefault, true)
+                .build()
     }
 }

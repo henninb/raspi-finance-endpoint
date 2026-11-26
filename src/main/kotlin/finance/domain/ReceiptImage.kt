@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonGetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.ImageFormatTypeConverter
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidImage
@@ -21,6 +20,7 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 import org.apache.logging.log4j.LogManager
 import org.hibernate.annotations.BatchSize
+import tools.jackson.databind.json.JsonMapper
 import java.sql.Timestamp
 import java.util.Base64
 import java.util.Calendar
@@ -90,7 +90,7 @@ data class ReceiptImage(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper().findAndRegisterModules()
+        private val mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
 
         @JsonIgnore
         private val logger = LogManager.getLogger()

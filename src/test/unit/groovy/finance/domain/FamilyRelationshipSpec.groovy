@@ -1,7 +1,7 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.JsonMappingException
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.databind.DatabindException
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -99,7 +99,7 @@ class FamilyRelationshipSpec extends BaseDomainSpec {
         mapper.readValue(jsonPayloadInvalid, FamilyRelationship)
 
         then:
-        JsonMappingException ex = thrown(JsonMappingException)
+        DatabindException ex = thrown(DatabindException)
         ex.message.contains('Unknown FamilyRelationship')
         0 * _
     }
@@ -109,7 +109,7 @@ class FamilyRelationshipSpec extends BaseDomainSpec {
         mapper.readValue('invalid-json', FamilyRelationship)
 
         then:
-        JsonParseException ex = thrown(JsonParseException)
+        StreamReadException ex = thrown(StreamReadException)
         ex.message.contains('Unrecognized token')
         0 * _
     }

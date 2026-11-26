@@ -5,8 +5,10 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.Validation
 import jakarta.validation.Validator
 import jakarta.validation.ValidatorFactory
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.SerializationFeature
+import tools.jackson.databind.cfg.DateTimeFeature
 import groovy.json.JsonSlurper
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -19,9 +21,11 @@ class MedicalExpenseSpec extends Specification {
     void setup() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory()
         validator = factory.getValidator()
-        objectMapper = new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            .findAndRegisterModules()
+        objectMapper = JsonMapper.builderWithJackson2Defaults()
+            .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+            .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .findAndAddModules()
+            .build()
     }
 
     def "should create valid medical expense"() {

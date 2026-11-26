@@ -1,7 +1,7 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.JsonMappingException
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.databind.DatabindException
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -105,7 +105,7 @@ class MedicalProviderTypeSpec extends BaseDomainSpec {
         mapper.readValue(jsonPayloadInvalid, MedicalProviderType)
 
         then:
-        JsonMappingException ex = thrown(JsonMappingException)
+        DatabindException ex = thrown(DatabindException)
         ex.message.contains('Unknown MedicalProviderType')
         0 * _
     }
@@ -115,7 +115,7 @@ class MedicalProviderTypeSpec extends BaseDomainSpec {
         mapper.readValue('invalid-json', MedicalProviderType)
 
         then:
-        JsonParseException ex = thrown(JsonParseException)
+        StreamReadException ex = thrown(StreamReadException)
         ex.message.contains('Unrecognized token')
         0 * _
     }

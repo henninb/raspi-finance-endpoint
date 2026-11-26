@@ -1,6 +1,7 @@
 package finance.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 import finance.Application
 import finance.config.TestSecurityConfig
 import finance.domain.Category
@@ -57,7 +58,7 @@ class ReferenceDataPerfSpec extends Specification {
     String username = "perf_user"
 
     @Shared
-    ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
+    ObjectMapper mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
 
     @Shared
     org.springframework.web.client.RestTemplate restTemplate

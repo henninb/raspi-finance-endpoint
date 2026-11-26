@@ -1,6 +1,6 @@
 package finance.domain
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
 import spock.lang.Specification
 import jakarta.validation.Validation
 import jakarta.validation.Validator

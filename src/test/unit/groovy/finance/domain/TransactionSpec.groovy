@@ -1,9 +1,9 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.JsonMappingException
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.databind.DatabindException
+import tools.jackson.databind.exc.InvalidFormatException
+import tools.jackson.databind.exc.MismatchedInputException
 import finance.helpers.TransactionBuilder
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
@@ -89,16 +89,16 @@ class TransactionSpec extends BaseDomainSpec {
 
         where:
         payload                            | thownExecption
-        '{"transactionDate":"1/20/2020"}'  | JsonMappingException
-        '{"transactionDate":"2020-04-31"}' | JsonMappingException
-        '{"accountType":"notValid"}'       | JsonMappingException
-        '{"accountType":"notValid"}'       | JsonMappingException
-        '{"transactionType":"notValid"}'   | JsonMappingException
-        '{"reoccurringType":"notValid"}'   | JsonMappingException
-        '{"amount":"1.222a"}'              | JsonMappingException
-        'invalid'                          | JsonParseException
+        '{"transactionDate":"1/20/2020"}'  | DatabindException
+        '{"transactionDate":"2020-04-31"}' | DatabindException
+        '{"accountType":"notValid"}'       | DatabindException
+        '{"accountType":"notValid"}'       | DatabindException
+        '{"transactionType":"notValid"}'   | DatabindException
+        '{"reoccurringType":"notValid"}'   | DatabindException
+        '{"amount":"1.222a"}'              | DatabindException
+        'invalid'                          | StreamReadException
         '[]'                               | MismatchedInputException
-        '{description: "test"}'            | JsonParseException
+        '{description: "test"}'            | StreamReadException
         '{"amount": "abc"}'                | InvalidFormatException
     }
 

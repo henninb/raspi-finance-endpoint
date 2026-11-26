@@ -1,7 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 
 data class MergeDescriptionsRequest(
     @param:JsonProperty("sourceNames") val sourceNames: List<String> = listOf(),
@@ -10,6 +10,6 @@ data class MergeDescriptionsRequest(
     override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
-        private val mapper = ObjectMapper().findAndRegisterModules()
+        private val mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
     }
 }

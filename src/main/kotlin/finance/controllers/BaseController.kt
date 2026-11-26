@@ -1,6 +1,5 @@
 package finance.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.exceptions.DuplicateAccountException
 import finance.utils.IpAddressValidator
 import jakarta.persistence.EntityNotFoundException
@@ -22,6 +21,7 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
+import tools.jackson.databind.json.JsonMapper
 import java.util.concurrent.ExecutionException
 
 open class BaseController {
@@ -185,7 +185,7 @@ open class BaseController {
     protected fun writeJson(obj: Any): String = mapper.writeValueAsString(obj)
 
     companion object {
-        private val mapper: ObjectMapper = ObjectMapper().apply { findAndRegisterModules() }
+        private val mapper: JsonMapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
         val logger: Logger = LoggerFactory.getLogger(BaseController::class.java)
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${BaseController::class.java.simpleName}")
     }

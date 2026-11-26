@@ -1,6 +1,7 @@
 package finance.domain
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 import spock.lang.Specification
 
 import jakarta.validation.Validation
@@ -10,7 +11,7 @@ import jakarta.validation.ValidatorFactory
 class BaseDomainSpec extends Specification {
     protected ValidatorFactory validatorFactory
     protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
+    protected ObjectMapper mapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
 
     void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()

@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import finance.utils.ClaimStatusConverter
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
@@ -31,6 +29,9 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import tools.jackson.databind.SerializationFeature
+import tools.jackson.databind.cfg.DateTimeFeature
+import tools.jackson.databind.json.JsonMapper
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -241,11 +242,12 @@ data class MedicalExpense(
     companion object {
         @JsonIgnore
         private val mapper =
-            ObjectMapper().apply {
-                setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
-                findAndRegisterModules()
-                configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            }
+            JsonMapper
+                .builderWithJackson2Defaults()
+                .changeDefaultPropertyInclusion { JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL) }
+                .findAndAddModules()
+                .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+                .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .build()
     }
 }

@@ -1,7 +1,7 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.JsonMappingException
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.databind.DatabindException
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -94,7 +94,7 @@ class NetworkStatusSpec extends BaseDomainSpec {
         mapper.readValue(jsonPayloadInvalid, NetworkStatus)
 
         then:
-        JsonMappingException ex = thrown(JsonMappingException)
+        DatabindException ex = thrown(DatabindException)
         ex.message.contains('Unknown NetworkStatus')
         0 * _
     }
@@ -104,7 +104,7 @@ class NetworkStatusSpec extends BaseDomainSpec {
         mapper.readValue('invalid-json', NetworkStatus)
 
         then:
-        JsonParseException ex = thrown(JsonParseException)
+        StreamReadException ex = thrown(StreamReadException)
         ex.message.contains('Unrecognized token')
         0 * _
     }

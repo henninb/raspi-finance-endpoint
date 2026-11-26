@@ -1,7 +1,7 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.databind.exc.MismatchedInputException
 import finance.helpers.PaymentBuilder
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
@@ -48,10 +48,10 @@ class PaymentSpec extends BaseDomainSpec {
 
         where:
         payload                | exceptionThrown          | message
-        'non-jsonPayload'      | JsonParseException       | 'Unrecognized token'
+        'non-jsonPayload'      | StreamReadException       | 'Unrecognized token'
         '[]'                   | MismatchedInputException | 'Cannot deserialize value of type'
-        '{guidSource: "test"}' | JsonParseException       | 'was expecting double-quote to start field name'
-        '{"amount": "123",}'   | JsonParseException       | 'was expecting double-quote to start field name'
+        '{guidSource: "test"}' | StreamReadException       | 'was expecting double-quote to start property name'
+        '{"amount": "123",}'   | StreamReadException       | 'was expecting double-quote to start property name'
     }
 
     void 'test validation valid payment'() {

@@ -1,7 +1,8 @@
 package finance.controllers
 
 import finance.Application
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 import finance.domain.Account
 import finance.domain.MedicalExpense
 import finance.domain.Payment
@@ -73,7 +74,7 @@ class BaseControllerFunctionalSpec extends Specification {
     protected String jwtKey
 
     @Shared
-    protected ObjectMapper jsonMapper = new ObjectMapper().findAndRegisterModules()
+    protected ObjectMapper jsonMapper = JsonMapper.builderWithJackson2Defaults().findAndAddModules().build()
 
     protected HttpHeaders headers = new HttpHeaders()
     @Shared
