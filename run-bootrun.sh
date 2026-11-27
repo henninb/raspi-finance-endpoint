@@ -209,7 +209,11 @@ fi
 log_info "✓ Created env.bootrun configuration file"
 
 log_info "Overriding database and influxdb hosts for local development..."
-sed 's/postgresql-server:5432/192.168.10.10:5432/g' env.bootrun > env.bootrun.tmp && mv env.bootrun.tmp env.bootrun
+# BOOTRUN_DB_HOST_PORT points bootRun at another PostgreSQL, e.g. the side-by-side
+# PG 19 test instance: BOOTRUN_DB_HOST_PORT=192.168.10.10:5433 ./run-bootrun.sh
+BOOTRUN_DB_HOST_PORT="${BOOTRUN_DB_HOST_PORT:-192.168.10.10:5432}"
+log_info "Database: ${BOOTRUN_DB_HOST_PORT}"
+sed "s/postgresql-server:5432/${BOOTRUN_DB_HOST_PORT}/g" env.bootrun > env.bootrun.tmp && mv env.bootrun.tmp env.bootrun
 sed 's/influxdb-server:8086/192.168.10.10:8086/g' env.bootrun > env.bootrun.tmp && mv env.bootrun.tmp env.bootrun
 log_info "✓ Overrides applied."
 

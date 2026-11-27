@@ -495,3 +495,16 @@ CREATE TABLE IF NOT EXISTS t_reward
     CONSTRAINT uk_reward_account_multiplier_category UNIQUE (account_id, multiplier, category),
     CONSTRAINT fk_reward_account_id FOREIGN KEY (account_id) REFERENCES t_account (account_id) ON DELETE CASCADE
 );
+
+-- Referential integrity for t_transaction_categories, as in prod V33 (added after
+-- t_transaction and t_category exist). Deleting a transaction or category removes
+-- its join rows.
+CREATE INDEX IF NOT EXISTS idx_transaction_categories_transaction_id ON t_transaction_categories(transaction_id);
+
+ALTER TABLE t_transaction_categories
+    ADD CONSTRAINT fk_transaction_categories_transaction
+        FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE;
+
+ALTER TABLE t_transaction_categories
+    ADD CONSTRAINT fk_transaction_categories_category
+        FOREIGN KEY (category_id) REFERENCES t_category (category_id) ON DELETE CASCADE;

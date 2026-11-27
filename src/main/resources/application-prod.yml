@@ -104,6 +104,9 @@ spring:
     open-in-view: false
     generate-ddl: true
     # Database platform - Spring Boot property that sets dialect BEFORE DB connection
+    # Keep this even though Hibernate logs HHH90000025 ("does not need to be specified explicitly"):
+    # without it Hibernate must reach PostgreSQL at startup to detect the dialect, so the app could
+    # fail to boot while the database is down instead of recovering via the resilience logic.
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: ${HIBERNATE_DDL}
@@ -253,6 +256,16 @@ performance:
     error-threshold-ms: 2000                      # Error on methods >2000ms
 
 debug: false
+
+# ===============================
+# = API DOCS
+# ===============================
+# Don't serve the OpenAPI spec or Swagger UI in production
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
 # Circuit breaker and resilience patterns
 resilience4j:
