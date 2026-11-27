@@ -259,12 +259,26 @@ else
   echo "✓ finance-lan network already exists"
 fi
 
-echo "Stopping and removing existing containers..."
+export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+export DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/$(id -u)/bus}
+
+# The containers are run only by their Quadlet services (Restart=always), so stop
+# the services first: a plain podman stop/rm would just make systemd restart them.
+echo "Stopping services..."
+for service in raspi-finance-endpoint influxdb-server; do
+  if systemctl --user is-active --quiet "${service}.service"; then
+    echo "  Stopping ${service}.service..."
+    systemctl --user stop "${service}.service"
+  fi
+done
+
+# Containers started outside systemd by older deploys (podman run) have no
+# PODMAN_SYSTEMD_UNIT label; remove them so the services own the names.
 for container in raspi-finance-endpoint influxdb-server; do
-  if podman ps -a --format "{{.Names}}" | grep -q "^${container}$"; then
-    echo "  Stopping and removing ${container}..."
-    podman stop "${container}" 2>/dev/null || true
-    podman rm -f "${container}" 2>/dev/null || true
+  if podman container exists "${container}"; then
+    echo "  Removing ${container}, which was started outside systemd..."
+    podman stop -t 30 "${container}" >/dev/null 2>&1 || true
+    podman rm -f "${container}" >/dev/null 2>&1 || true
   fi
 done
 
@@ -301,6 +315,7 @@ mkdir -p ~/.config/containers/systemd
 cat > ~/.config/containers/systemd/influxdb-server.container << EOF
 [Unit]
 Description=InfluxDB Server
+Wants=network-online.target
 After=network-online.target
 
 [Container]
@@ -321,7 +336,8 @@ DropCapability=ALL
 Tmpfs=/tmp:noexec,nosuid,size=50m
 
 [Service]
-Restart=no
+Restart=always
+RestartSec=10
 TimeoutStartSec=120
 
 [Install]
@@ -331,10 +347,13 @@ EOF
 cat > ~/.config/containers/systemd/raspi-finance-endpoint.container << EOF
 [Unit]
 Description=Raspi Finance Endpoint
+Wants=network-online.target
 After=network-online.target influxdb-server.service postgresql-server.service
 
 [Container]
 Image=localhost/raspi-finance-endpoint
+# Built locally by this script; never try to pull it from a registry.
+Pull=never
 ContainerName=raspi-finance-endpoint
 HostName=hornsup-endpoint
 PublishPort=192.168.10.10:8443:8443
@@ -357,10 +376,14 @@ AddCapability=SETGID
 AddCapability=SETUID
 User=${CURRENT_UID}:${CURRENT_GID}
 Tmpfs=/tmp:noexec,nosuid,size=100m
+# The JVM currently ignores SIGTERM and is killed after this many seconds.
+StopTimeout=30
 
 [Service]
-Restart=no
+Restart=always
+RestartSec=10
 TimeoutStartSec=120
+TimeoutStopSec=60
 
 [Install]
 WantedBy=default.target
@@ -368,65 +391,43 @@ EOF
 
 echo "✓ Quadlet files written to ~/.config/containers/systemd/"
 
-export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
-export DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/$(id -u)/bus}
-systemctl --user daemon-reload 2>/dev/null || true
-echo "✓ Systemd user daemon reloaded"
-
-echo "Starting influxdb-server..."
-podman run -d \
-  --replace \
-  --name influxdb-server \
-  --hostname influxdb-server \
-  -p 192.168.10.10:8086:8086 \
-  -v influxdb-data:/var/lib/influxdb3:rw \
-  -v "${REMOTE_DIR}/influxdb3/admin-token:/run/influxdb3/admin-token:ro" \
-  --network finance-lan \
-  --env-file "${REMOTE_DIR}/env.influx" \
-  --secret INFLUXDB_TOKEN,type=env \
-  -e INFLUXDB3_ADMIN_TOKEN_FILE=/run/influxdb3/admin-token \
-  -e INFLUXDB3_DB_DIR=/var/lib/influxdb3 \
-  --security-opt no-new-privileges:true \
-  --cap-drop ALL \
-  --tmpfs /tmp:noexec,nosuid,size=50m \
-  --restart unless-stopped \
-  influxdb:3-core \
-  serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping --wal-snapshot-size 300
-echo "✓ influxdb-server started"
-sleep 5
+systemctl --user daemon-reload
+for service in influxdb-server raspi-finance-endpoint; do
+  if ! systemctl --user cat "${service}.service" >/dev/null 2>&1; then
+    echo "ERROR: Quadlet did not generate ${service}.service; generator output:" >&2
+    /usr/libexec/podman/quadlet -dryrun -user 2>&1 | tail -20 >&2 || true
+    exit 1
+  fi
+done
+echo "✓ Systemd user daemon reloaded; services generated"
 
 mkdir -p "${REMOTE_DIR}/json_in"
-echo "Starting raspi-finance-endpoint..."
-podman run -d \
-  --replace \
-  --name raspi-finance-endpoint \
-  --hostname hornsup-endpoint \
-  -p 192.168.10.10:8443:8443 \
-  -v "${REMOTE_DIR}/json_in:/opt/raspi-finance-endpoint/json_in:rw" \
-  -v "${REMOTE_DIR}/ssl:/opt/raspi-finance-endpoint/ssl:ro" \
-  --network finance-lan \
-  --secret DATASOURCE_PASSWORD,type=env \
-  --secret SSL_KEY_PASSWORD,type=env \
-  --secret SSL_KEY_STORE_PASSWORD,type=env \
-  --secret BASIC_AUTH_PASSWORD,type=env \
-  --secret JWT_KEY,type=env \
-  --secret INFLUXDB_TOKEN,type=env \
-  --env-file "${REMOTE_DIR}/env.prod" \
-  --add-host "hornsup:${HOST_IP}" \
-  --add-host "finance-db.lan:${HOST_IP}" \
-  --pull never \
-  --security-opt no-new-privileges:true \
-  --cap-drop ALL \
-  --cap-add CHOWN \
-  --cap-add SETGID \
-  --cap-add SETUID \
-  --user "${CURRENT_UID}:${CURRENT_GID}" \
-  --tmpfs /tmp:noexec,nosuid,size=100m \
-  --restart unless-stopped \
-  localhost/raspi-finance-endpoint
-echo "✓ raspi-finance-endpoint started"
 
-echo "NOTE: Run 'sudo loginctl enable-linger ${USERNAME}' on this host to enable auto-start on reboot."
+# Start through systemd only: the services own the containers, restart them if they
+# exit (Restart=always) and bring them back at boot (WantedBy=default.target).
+for service in influxdb-server raspi-finance-endpoint; do
+  echo "Starting ${service}.service..."
+  systemctl --user reset-failed "${service}.service" 2>/dev/null || true
+  systemctl --user start "${service}.service"
+  for _ in $(seq 1 20); do
+    if podman container exists "${service}" && \
+       [ "$(podman inspect -f '{{.State.Running}}' "${service}" 2>/dev/null)" = "true" ]; then
+      break
+    fi
+    sleep 1
+  done
+  if ! systemctl --user is-active --quiet "${service}.service"; then
+    echo "ERROR: ${service}.service failed to start" >&2
+    systemctl --user --no-pager --lines=20 status "${service}.service" >&2 || true
+    exit 1
+  fi
+  echo "✓ ${service}.service is active"
+done
+
+if [ "$(loginctl show-user "$(id -un)" -p Linger --value 2>/dev/null)" != "yes" ]; then
+  echo "WARNING: linger is off; the services will not start at boot until you log in." >&2
+  echo "         Fix with: sudo loginctl enable-linger ${USERNAME}" >&2
+fi
 
 podman ps -a
 ENDSSH
@@ -514,7 +515,7 @@ log "  Network info: ssh ${REMOTE_HOST} 'podman network inspect finance-lan'"
 log ""
 log "Quadlet (auto-start on reboot):"
 log "  Files: ssh ${REMOTE_HOST} 'ls ~/.config/containers/systemd/'"
-log "  Enable linger: ssh ${REMOTE_HOST} 'sudo loginctl enable-linger ${USERNAME}'"
+log "  Services:     ssh ${REMOTE_HOST} 'systemctl --user status raspi-finance-endpoint influxdb-server'"
 log ""
 log "Troubleshooting:"
 log "  Re-run deployment: ./deploy-podman.sh"
