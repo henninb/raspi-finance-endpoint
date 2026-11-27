@@ -28,6 +28,9 @@ class ValidationAmountRepositorySpec extends Specification {
             'findByOwnerAndTransactionStateAndAccountId',
             'findByOwnerAndAccountId',
             'findByOwnerAndActiveStatusTrueOrderByValidationDateDesc',
+            'findByOwnerAndAccountIdAndActiveStatusTrueOrderByValidationDateDesc',
+            'findByOwnerAndAccountIdAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc',
+            'findByOwnerAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc',
             'findByOwnerAndValidationIdAndActiveStatusTrue',
             'deleteByOwnerAndAccountId',
         ])

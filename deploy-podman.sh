@@ -376,7 +376,7 @@ AddCapability=SETGID
 AddCapability=SETUID
 User=${CURRENT_UID}:${CURRENT_GID}
 Tmpfs=/tmp:noexec,nosuid,size=100m
-# The JVM currently ignores SIGTERM and is killed after this many seconds.
+# Time for Spring Boot to shut down gracefully on SIGTERM before it is killed.
 StopTimeout=30
 
 [Service]

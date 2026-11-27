@@ -1,6 +1,8 @@
 # Use specific version for security and reproducibility
 # Eclipse Temurin is the official OpenJDK distribution (replaces deprecated openjdk images)
-FROM eclipse-temurin:24-jdk-noble
+# Java 25 LTS runtime (JRE only: the jar is built by Gradle outside the image, and
+# the build targets Java 21 bytecode, which runs unchanged on 25).
+FROM eclipse-temurin:25-jre-noble
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
@@ -57,7 +59,10 @@ EXPOSE 8443
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -k -f https://localhost:8443/actuator/health || exit 1
 
-CMD java -Duser.timezone=${TIMEZONE} \
+# exec: the shell replaces itself with the JVM, so java is PID 1 and receives
+# SIGTERM on podman stop (without it /bin/sh was PID 1, ignored SIGTERM, and every
+# stop ended in SIGKILL after the timeout).
+CMD exec java -Duser.timezone=${TIMEZONE} \
     -Xmx2048m \
     -XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \

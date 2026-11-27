@@ -289,23 +289,40 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "findAllActiveFiltered should filter by account and state"() {
+    def "findAllActiveFiltered should filter by account and state in the database"() {
         given:
         def account = new Account(accountId: 1L)
         def va1 = new ValidationAmount(accountId: 1L, transactionState: TransactionState.Cleared, activeStatus: true)
-        def va2 = new ValidationAmount(accountId: 1L, transactionState: TransactionState.Outstanding, activeStatus: true)
-        def va3 = new ValidationAmount(accountId: 2L, transactionState: TransactionState.Cleared, activeStatus: true)
 
         when:
         def result = standardizedValidationAmountService.findAllActiveFiltered("acc1", TransactionState.Cleared)
 
         then:
-        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> [va1, va2, va3]
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "acc1") >> Optional.of(account)
+        1 * validationAmountRepositoryMock.findByOwnerAndAccountIdAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc(
+            TEST_OWNER, 1L, TransactionState.Cleared) >> [va1]
+        0 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(_)
         result instanceof ServiceResult.Success
         result.data.size() == 1
         result.data[0].accountId == 1L
         result.data[0].transactionState == TransactionState.Cleared
+    }
+
+    def "findAllActiveFiltered should filter by account only in the database"() {
+        given:
+        def account = new Account(accountId: 7L)
+        def va1 = new ValidationAmount(accountId: 7L, transactionState: TransactionState.Cleared, activeStatus: true)
+        def va2 = new ValidationAmount(accountId: 7L, transactionState: TransactionState.Outstanding, activeStatus: true)
+
+        when:
+        def result = standardizedValidationAmountService.findAllActiveFiltered("acc7", null)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "acc7") >> Optional.of(account)
+        1 * validationAmountRepositoryMock.findByOwnerAndAccountIdAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER, 7L) >> [va1, va2]
+        0 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(_)
+        result instanceof ServiceResult.Success
+        result.data.size() == 2
     }
 
     def "findAllActiveFiltered should return empty list if account not found"() {
@@ -313,8 +330,8 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.findAllActiveFiltered("missing", null)
 
         then:
-        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> []
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "missing") >> Optional.empty()
+        0 * validationAmountRepositoryMock._
         result instanceof ServiceResult.Success
         result.data.isEmpty()
     }
@@ -369,7 +386,9 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.findAllActiveFiltered(null, TransactionState.Cleared)
 
         then:
-        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> [va1, va2]
+        1 * validationAmountRepositoryMock.findByOwnerAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc(
+            TEST_OWNER, TransactionState.Cleared) >> [va1]
+        0 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(_)
         result instanceof ServiceResult.Success
         result.data.size() == 1
         result.data[0].transactionState == TransactionState.Cleared

@@ -40,6 +40,24 @@ interface ValidationAmountRepository : JpaRepository<ValidationAmount, Long> {
         owner: String,
     ): List<ValidationAmount>
 
+    // Filtered in the database, so a page asking about one account does not load
+    // every validation amount of the owner (4,478 rows in production) and filter in memory.
+    fun findByOwnerAndAccountIdAndActiveStatusTrueOrderByValidationDateDesc(
+        owner: String,
+        accountId: Long,
+    ): List<ValidationAmount>
+
+    fun findByOwnerAndAccountIdAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc(
+        owner: String,
+        accountId: Long,
+        transactionState: TransactionState,
+    ): List<ValidationAmount>
+
+    fun findByOwnerAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc(
+        owner: String,
+        transactionState: TransactionState,
+    ): List<ValidationAmount>
+
     fun findByOwnerAndValidationIdAndActiveStatusTrue(
         owner: String,
         validationId: Long,

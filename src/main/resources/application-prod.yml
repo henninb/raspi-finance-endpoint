@@ -62,7 +62,10 @@ spring:
       schema: public
       # Connection pool settings for resilience
       maximum-pool-size: 20
-      minimum-idle: 0
+      # Keep connections open while idle: with 0, the pool emptied after idle-timeout
+      # and the next page load had to open ~6 TLS+SCRAM connections one at a time
+      # (HikariCP adds connections on a single thread), adding up to ~0.8 s.
+      minimum-idle: 5
       connection-timeout: 20000
       idle-timeout: 300000
       max-lifetime: 1800000

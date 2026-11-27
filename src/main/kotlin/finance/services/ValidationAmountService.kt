@@ -47,26 +47,48 @@ class ValidationAmountService
         ): ServiceResult<List<ValidationAmount>> =
             handleServiceOperation("findAllActiveFiltered", null) {
                 val owner = TenantContext.getCurrentOwner()
-                val allActive = validationAmountRepository.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(owner)
 
-                // Apply filters if provided
-                var filtered = allActive
-
-                if (accountNameOwner != null) {
-                    val account = accountRepository.findByOwnerAndAccountNameOwner(owner, accountNameOwner)
-                    if (account.isPresent) {
-                        filtered = filtered.filter { it.accountId == account.get().accountId }
+                // Resolve the account first; an unknown account matches nothing.
+                val accountId =
+                    if (accountNameOwner != null) {
+                        accountRepository
+                            .findByOwnerAndAccountNameOwner(owner, accountNameOwner)
+                            .orElse(null)
+                            ?.accountId
+                            ?: return@handleServiceOperation emptyList()
                     } else {
-                        // Account not found - return empty list
-                        return@handleServiceOperation emptyList()
+                        null
+                    }
+
+                // Filter in the database rather than loading every active row and filtering here.
+                when {
+                    accountId != null && transactionState != null -> {
+                        validationAmountRepository
+                            .findByOwnerAndAccountIdAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc(
+                                owner,
+                                accountId,
+                                transactionState,
+                            )
+                    }
+
+                    accountId != null -> {
+                        validationAmountRepository.findByOwnerAndAccountIdAndActiveStatusTrueOrderByValidationDateDesc(
+                            owner,
+                            accountId,
+                        )
+                    }
+
+                    transactionState != null -> {
+                        validationAmountRepository.findByOwnerAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc(
+                            owner,
+                            transactionState,
+                        )
+                    }
+
+                    else -> {
+                        validationAmountRepository.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(owner)
                     }
                 }
-
-                if (transactionState != null) {
-                    filtered = filtered.filter { it.transactionState == transactionState }
-                }
-
-                filtered
             }
 
         override fun findById(id: Long): ServiceResult<ValidationAmount> =

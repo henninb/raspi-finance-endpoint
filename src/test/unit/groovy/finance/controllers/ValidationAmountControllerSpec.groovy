@@ -327,7 +327,7 @@ class ValidationAmountControllerSpec extends Specification {
     def "findAllActiveWithFilters with accountNameOwner returns filtered list"() {
         given:
         def list = [va(validationId: 1L, accountId: 5L), va(validationId: 2L, accountId: 5L)]
-        validationRepo.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> list
+        validationRepo.findByOwnerAndAccountIdAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER, 5L) >> list
         def account = new finance.domain.Account(accountId: 5L, accountNameOwner: "checking_primary", owner: TEST_OWNER)
         accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(account)
 
@@ -356,7 +356,7 @@ class ValidationAmountControllerSpec extends Specification {
     def "findAllActiveWithFilters with transactionState returns filtered list"() {
         given:
         def list = [va(validationId: 1L, transactionState: TransactionState.Cleared)]
-        validationRepo.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> list
+        validationRepo.findByOwnerAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER, TransactionState.Cleared) >> list
 
         when:
         ResponseEntity<List<ValidationAmount>> response = controller.findAllActiveWithFilters(null, "Cleared")
@@ -507,11 +507,10 @@ class ValidationAmountControllerSpec extends Specification {
 
     def "findAllActiveWithFilters with both accountNameOwner and transactionState returns intersection"() {
         given:
-        def list = [
-            va(validationId: 1L, accountId: 5L, transactionState: TransactionState.Cleared),
-            va(validationId: 2L, accountId: 5L, transactionState: TransactionState.Outstanding)
-        ]
-        validationRepo.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> list
+        // The database does the filtering now, so the combined query returns only the match.
+        def cleared = [va(validationId: 1L, accountId: 5L, transactionState: TransactionState.Cleared)]
+        validationRepo.findByOwnerAndAccountIdAndTransactionStateAndActiveStatusTrueOrderByValidationDateDesc(
+            TEST_OWNER, 5L, TransactionState.Cleared) >> cleared
         def account = new finance.domain.Account(accountId: 5L, accountNameOwner: "checking_primary", owner: TEST_OWNER)
         accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(account)
 
