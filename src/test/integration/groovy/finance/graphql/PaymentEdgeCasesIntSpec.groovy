@@ -3,6 +3,7 @@ package finance.graphql
 import finance.BaseIntegrationSpec
 import finance.controllers.graphql.GraphQLMutationController
 import finance.controllers.dto.PaymentInputDto
+import finance.repositories.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.time.LocalDate
@@ -15,6 +16,9 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     @Autowired
     GraphQLMutationController mutationController
+
+    @Autowired
+    TransactionRepository transactionRepository
 
     def "createPayment should handle accounts with Undefined account type gracefully"() {
         given:
@@ -41,7 +45,10 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
         ex.message.contains("unsupported account type combination undefined -> checking")
     }
 
-    def "createPayment should handle utility account type (expense category)"() {
+    // Utility billers are expense-category accounts. Since AccountType.isPayable
+    // (commit beb5fe4e) they are valid payment destinations: asset -> utility is a
+    // BILL_PAYMENT, like asset -> liability. As a payment source they stay unsupported.
+    def "createPayment should accept a payment to a utility account as a bill payment"() {
         given:
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_utility", "checking", true)
         String utilityAccount = testDataManager.createAccountFor(testOwner, "utility_test", "utility", true)
@@ -59,11 +66,48 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
         )
 
         when: "creating the payment"
+        def result = mutationController.createPayment(dto)
+
+        then: "the payment and both of its transactions are created"
+        result != null
+        result.sourceAccount == checkingAccount
+        result.destinationAccount == utilityAccount
+        result.amount == new BigDecimal("125.00")
+        result.guidSource != null
+        result.guidDestination != null
+
+        and: "both transactions are booked as a bill payment"
+        def source = transactionRepository.findByGuid(result.guidSource).orElseThrow()
+        def destination = transactionRepository.findByGuid(result.guidDestination).orElseThrow()
+        source.accountNameOwner == checkingAccount
+        destination.accountNameOwner == utilityAccount
+        source.category == "bill_pay"
+        destination.category == "bill_pay"
+    }
+
+    def "createPayment should reject a utility account as the payment source"() {
+        given:
+        String utilityAccount = testDataManager.createAccountFor(testOwner, "utility_source", "utility", true)
+        String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_from_utility", "checking", true)
+
+        and: "a payment from a utility account"
+        def dto = new PaymentInputDto(
+                null,
+                utilityAccount,
+                checkingAccount,
+                LocalDate.parse("2024-02-01"),
+                new BigDecimal("125.00"),
+                null,
+                null,
+                null
+        )
+
+        when: "creating the payment"
         mutationController.createPayment(dto)
 
-        then: "expense-only account types are rejected for payments"
+        then: "expense-category accounts cannot be a payment source"
         def ex = thrown(IllegalStateException)
-        ex.message.contains("unsupported account type combination checking -> utility")
+        ex.message.contains("unsupported account type combination utility -> checking")
     }
 
     def "createPayment should handle payment with future date"() {
